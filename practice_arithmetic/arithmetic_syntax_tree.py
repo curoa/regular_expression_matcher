@@ -23,7 +23,7 @@ from enum import Enum
 
 class NodeOperation(Enum):
 
-    NUMBER = 'number'
+    NUMBER = 'number' #FIXME I want to change to OPERAND
     PLUS = 'plus'
     MINUS = 'minus'
     MULTIPLY = 'multiply'
@@ -139,38 +139,42 @@ class Parser():
 
     def parse(self):
         #TODO consider if handle end_cursors as arg or not
-        return self.parse_plus_minus_formura()
-
-    def parse_plus_minus_formura(self):
         end_cursors = [None]
-        node = self.read_plus_minus_term()
+        return self.parse_plus_minus_formura(end_cursors)
+
+    def parse_plus_minus_formura(self, end_cursors):
+        node = self.read_plus_minus_term(end_cursors)
         while not (self.cursor in end_cursors):
             op = Parser.node_op_encorder[self.cursor]
             self.move_cursor_next()
-            node_next = self.read_plus_minus_term()
+            node_next = self.read_plus_minus_term(end_cursors)
             node = Node(op, node, node_next)
         return node
 
-    def read_plus_minus_term(self):
-        #return self.parse_number_formura()
-        return self.parse_multiply_devide_formura()
-
-    def parse_multiply_devide_formura(self):
+    def read_plus_minus_term(self, parent_end_cursors):
         end_cursors = [
-                None,
                 MathExpressionToken.PLUS.value,
                 MathExpressionToken.MINUS.value,
                 ]
-        node = self.read_multiply_devide_term()
+        end_cursors.extend(parent_end_cursors)
+        return self.parse_multiply_devide_formura(end_cursors)
+
+    def parse_multiply_devide_formura(self, end_cursors):
+        node = self.read_multiply_devide_term(end_cursors)
         while not (self.cursor in end_cursors):
             op = Parser.node_op_encorder[self.cursor]
             self.move_cursor_next()
-            node_next = self.read_multiply_devide_term()
+            node_next = self.read_multiply_devide_term(end_cursors)
             node = Node(op, node, node_next)
         return node
 
-    def read_multiply_devide_term(self):
-        return self.parse_number_formura()
+    def read_multiply_devide_term(self, parent_end_cursors):
+        end_cursors = [
+                MathExpressionToken.MULTIPLY.value,
+                MathExpressionToken.DIVIDE.value,
+                ]
+        end_cursors.extend(parent_end_cursors)
+        return self.get_operand(end_cursors)
         #return self.parse_parenthesis_formura() #TODO
 
     def parse_parenthesis_formura(self):
@@ -181,14 +185,7 @@ class Parser():
         self.move_cursor_next() # shift away MathExpressionToken.EPAR
         return x
 
-    def parse_number_formura(self):
-        end_cursors = [ #TODO
-                None,
-                MathExpressionToken.PLUS.value,
-                MathExpressionToken.MINUS.value,
-                MathExpressionToken.MULTIPLY.value,
-                MathExpressionToken.DIVIDE.value,
-                ]
+    def get_operand(self, end_cursors):
         num_str = ''
         while not (self.cursor in end_cursors):
             num_str += self.cursor
