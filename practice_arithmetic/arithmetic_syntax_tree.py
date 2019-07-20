@@ -129,6 +129,16 @@ class Parser():
         self.move_cursor_next() # set cursor start of formula
         return self.parse()
 
+    def parse_binary_operator(self, end_cursors, read_term_func):
+        node = read_term_func(end_cursors)
+        while not (self.cursor in end_cursors):
+            op = Parser.node_op_encorder[self.cursor]
+            self.move_cursor_next()
+            node_next = read_term_func(end_cursors)
+            node = Node(op, node, node_next)
+        return node
+
+
     def move_cursor_next(self):
         if len(self.remain) == 0:
             self.cursor = None
@@ -137,18 +147,11 @@ class Parser():
         self.remain.pop(0)
 
     def parse(self):
-        #TODO consider if handle end_cursors as arg or not
         end_cursors = [None, MathExpressionToken.EPAR.value]
         return self.parse_plus_minus_formura(end_cursors)
 
     def parse_plus_minus_formura(self, end_cursors):
-        node = self.read_plus_minus_term(end_cursors)
-        while not (self.cursor in end_cursors):
-            op = Parser.node_op_encorder[self.cursor]
-            self.move_cursor_next()
-            node_next = self.read_plus_minus_term(end_cursors)
-            node = Node(op, node, node_next)
-        return node
+        return self.parse_binary_operator(end_cursors, self.read_plus_minus_term)
 
     def read_plus_minus_term(self, parent_end_cursors):
         end_cursors = [
@@ -159,13 +162,7 @@ class Parser():
         return self.parse_multiply_devide_formura(end_cursors)
 
     def parse_multiply_devide_formura(self, end_cursors):
-        node = self.read_multiply_devide_term(end_cursors)
-        while not (self.cursor in end_cursors):
-            op = Parser.node_op_encorder[self.cursor]
-            self.move_cursor_next()
-            node_next = self.read_multiply_devide_term(end_cursors)
-            node = Node(op, node, node_next)
-        return node
+        return self.parse_binary_operator(end_cursors, self.read_multiply_devide_term)
 
     def read_multiply_devide_term(self, parent_end_cursors):
         end_cursors = [
@@ -191,5 +188,4 @@ class Parser():
             return None
         node = Node.constract_number_node(int(num_str))
         return node
-
 
