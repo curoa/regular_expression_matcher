@@ -101,8 +101,8 @@ class MathExpressionToken(Enum):
     MINUS = '-'
     MULTIPLY = '*'
     DIVIDE = '/'
-    LPAR = '('
-    RPAR = ')'
+    SPAR = '(' # start of parenthesis
+    EPAR = ')' # end of parenthesis
 
 
 class Parser():
@@ -127,7 +127,7 @@ class Parser():
 
     def make_tree(self, formula):
         self.remain = list(formula)
-        self.move_cursor_next()
+        self.move_cursor_next() # set cursor start of formula
         return self.parse()
 
     def move_cursor_next(self):
@@ -171,7 +171,15 @@ class Parser():
 
     def read_multiply_devide_term(self):
         return self.parse_number_formura()
+        #return self.parse_parenthesis_formura() #TODO
 
+    def parse_parenthesis_formura(self):
+        if self.cursor != MathExpressionToken.SPAR.value:
+            return parse_number_formura()
+        x = parse()
+        assert(self.cursor == MathExpressionToken.EPAR.value)
+        self.move_cursor_next() # shift away MathExpressionToken.EPAR
+        return x
 
     def parse_number_formura(self):
         end_cursors = [ #TODO
