@@ -47,23 +47,22 @@ class Node():
     def constract_number_node(value):
         return Node(NodeOperation.NUMBER, value=value)
 
-    def __repr__(self):
-        return self.pf()
+    def __str__(self):
+        return '\n'.join(self.pf())
 
-    def repr_verbose(self):
+    def __repr__(self):
         return pf(vars(self))
 
     def pf(self, flg_tree_view=True):
         Node.flg_tree_view = flg_tree_view
         depth = 0
-        lines = '\n'.join(self._pf(depth))
-        return '\n'.join(self._pf(depth))
+        return self._pf(depth)
 
     def pf_as_tree(self):
-        return pf(flg_tree_view=True)
+        return self.pf(flg_tree_view=True)
 
     def pf_as_order(self):
-        return pf(flg_tree_view=False)
+        return self.pf(flg_tree_view=False)
 
     def _pf(self, depth):
         """
@@ -139,7 +138,7 @@ class Parser():
 
     def parse(self):
         #TODO consider if handle end_cursors as arg or not
-        end_cursors = [None]
+        end_cursors = [None, MathExpressionToken.EPAR.value]
         return self.parse_plus_minus_formura(end_cursors)
 
     def parse_plus_minus_formura(self, end_cursors):
@@ -174,20 +173,18 @@ class Parser():
                 MathExpressionToken.DIVIDE.value,
                 ]
         end_cursors.extend(parent_end_cursors)
-        return self.get_operand(end_cursors)
-        #return self.parse_parenthesis_formura() #TODO
+        return self.get_operand()
 
-    def parse_parenthesis_formura(self):
-        if self.cursor != MathExpressionToken.SPAR.value:
-            return parse_number_formura()
-        x = parse()
-        assert(self.cursor == MathExpressionToken.EPAR.value)
-        self.move_cursor_next() # shift away MathExpressionToken.EPAR
-        return x
-
-    def get_operand(self, end_cursors):
+    def get_operand(self):
+        if self.cursor == MathExpressionToken.SPAR.value:
+            self.move_cursor_next()
+            node = self.parse()
+            assert(self.cursor == MathExpressionToken.EPAR.value)
+            self.move_cursor_next() # shift away MathExpressionToken.EPAR
+            return node
         num_str = ''
-        while not (self.cursor in end_cursors):
+        valid_cursors = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ]
+        while (self.cursor in valid_cursors):
             num_str += self.cursor
             self.move_cursor_next()
         if len(num_str) == 0:
