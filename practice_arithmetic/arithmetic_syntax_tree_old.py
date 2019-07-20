@@ -108,7 +108,7 @@ class Parser():
     @staticmethod
     def parse(formula):
         # only plus
-        prev_node, remain = Parser.read_plus_term(formula)
+        prev_node, remain = Parser.read_plus_minus_term(formula)
         if len(remain) == 0:
             return prev_node
         op = remain[0]
@@ -117,7 +117,7 @@ class Parser():
         return node
 
     @staticmethod
-    def read_plus_term(formula):
+    def read_plus_minus_term(formula):
         term = ''
         separaters = ['+', '-']
         while not (len(formula) == 0 or formula[0] in separaters):
