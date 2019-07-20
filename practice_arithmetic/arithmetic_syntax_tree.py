@@ -32,6 +32,8 @@ class NodeOperation(Enum):
 
 class Node():
 
+    flg_tree_view = None # used pf()
+
     def __init__(self, op, prev=None, _next=None, value=None):
         assert(type(op) is NodeOperation)
         assert(prev is None or isinstance(prev, Node)), pf(prev)
@@ -46,22 +48,39 @@ class Node():
         return Node(NodeOperation.NUMBER, value=value)
 
     def __repr__(self):
-        return '\n'.join(self.pf())
-        #return pf(self.pf())
+        return self.pf()
 
-    def repr_vervose(self):
+    def repr_verbose(self):
         return pf(vars(self))
 
-    def pf(self, depth=0):
+    def pf(self, flg_tree_view=True):
+        Node.flg_tree_view = flg_tree_view
+        depth = 0
+        lines = '\n'.join(self._pf(depth))
+        return '\n'.join(self._pf(depth))
+
+    def pf_as_tree(self):
+        return pf(flg_tree_view=True)
+
+    def pf_as_order(self):
+        return pf(flg_tree_view=False)
+
+    def _pf(self, depth):
         """
         return list of line
         """
+        self_line = self.pf_one_node(depth)
+        prev_out = self.prev._pf(depth + 1) if self.prev else []
+        next_out = self.next._pf(depth + 1) if self.next else []
         out = []
-        if self.prev is not None:
-            out.extend(self.prev.pf(depth + 1))
-        out.append(self.pf_one_node(depth))
-        if self.next is not None:
-            out.extend(self.next.pf(depth + 1))
+        if Node.flg_tree_view:
+            out.extend(prev_out)
+            out.append(self_line)
+            out.extend(next_out)
+        else:
+            out.extend(prev_out)
+            out.extend(next_out)
+            out.append(self_line)
         return out
 
     def pf_one_node(self, depth):
@@ -88,7 +107,6 @@ class MathExpressionToken(Enum):
 
 class Parser():
     # not handle parenthesis
-    # not handle multi, devide
 
     node_op_encorder = {
             MathExpressionToken.PLUS.value: NodeOperation.PLUS,
@@ -105,8 +123,6 @@ class Parser():
     def run(formula):
         parser = Parser()
         node = parser.make_tree(formula)
-        pp('node') # debug
-        pp(node) # debug
         return node
 
     def make_tree(self, formula):
@@ -122,9 +138,10 @@ class Parser():
         self.remain.pop(0)
 
     def parse(self):
-        return self.read_plus_minus_formura()
+        #TODO consider if handle end_cursors as arg or not
+        return self.parse_plus_minus_formura()
 
-    def read_plus_minus_formura(self):
+    def parse_plus_minus_formura(self):
         end_cursors = [None]
         node = self.read_plus_minus_term()
         while not (self.cursor in end_cursors):
@@ -135,13 +152,34 @@ class Parser():
         return node
 
     def read_plus_minus_term(self):
-        return self.read_number_formura()
+        #return self.parse_number_formura()
+        return self.parse_multiply_devide_formura()
 
-    def read_number_formura(self):
+    def parse_multiply_devide_formura(self):
         end_cursors = [
                 None,
                 MathExpressionToken.PLUS.value,
                 MathExpressionToken.MINUS.value,
+                ]
+        node = self.read_multiply_devide_term()
+        while not (self.cursor in end_cursors):
+            op = Parser.node_op_encorder[self.cursor]
+            self.move_cursor_next()
+            node_next = self.read_multiply_devide_term()
+            node = Node(op, node, node_next)
+        return node
+
+    def read_multiply_devide_term(self):
+        return self.parse_number_formura()
+
+
+    def parse_number_formura(self):
+        end_cursors = [ #TODO
+                None,
+                MathExpressionToken.PLUS.value,
+                MathExpressionToken.MINUS.value,
+                MathExpressionToken.MULTIPLY.value,
+                MathExpressionToken.DIVIDE.value,
                 ]
         num_str = ''
         while not (self.cursor in end_cursors):
