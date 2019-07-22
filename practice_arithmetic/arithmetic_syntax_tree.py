@@ -165,11 +165,6 @@ class Parser():
         return self.parse_binary_operator(end_cursors, self.read_multiply_devide_term)
 
     def read_multiply_devide_term(self, parent_end_cursors):
-        end_cursors = [
-                MathExpressionToken.MULTIPLY.value,
-                MathExpressionToken.DIVIDE.value,
-                ]
-        end_cursors.extend(parent_end_cursors)
         return self.get_operand()
 
     def get_operand(self):
