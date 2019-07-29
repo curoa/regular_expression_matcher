@@ -7,6 +7,7 @@ NFA_VECTOR_SIZE = int(NFA_STATE_MAX / 8)
 DFA_STATE_MAX = 100
 
 class NfaStateSet:
+    # merely bit vector
     def __init__(self):
         self.vec = [0 for _ in range(NFA_VECTOR_SIZE)]
 
@@ -44,6 +45,7 @@ class Dfa:
         self.debug = debug
 
     def check_nfa_state(self, state, s):
+        # merely checking bit vector
         return state.vec[int(s/8)] & (1 << (s%8))
 
     def dump_state_set(self, p):
@@ -67,6 +69,7 @@ class Dfa:
             print("}")
 
     def add_nfa_state(self, state, s):
+        # merely sign on bit vector
         state.vec[int(s/8)] |= (1 << (s%8))
 
     def mark_empty_transition(self, state, s):
