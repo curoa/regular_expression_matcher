@@ -33,6 +33,7 @@ class NodeOperation(Enum):
 class Node():
 
     def __init__(self, nop, prev=None, _next=None, char=None):
+        #FIXME consider list instead of prev, next
         assert(type(nop) is NodeOperation)
         assert(prev is None or isinstance(prev, Node))
         assert(_next is None or isinstance(_next, Node))
