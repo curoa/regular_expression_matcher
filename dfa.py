@@ -25,13 +25,20 @@ class HashableSet(set):
     use as const.
     """
 
-    def __hash__(self):
+    def hash_str(self):
         l = list(self)
         l.sort()
         hash_str = ''
         for v in l:
             hash_str += "{},".format(v)
-        return hash_str.__hash__()
+        return hash_str
+
+    def __hash__(self):
+        return self.hash_str().__hash__()
+
+    def __repr__(self):
+        return "@" + self.hash_str()[:-1] + "/"
+
 
 class Transitions(dict):
     """
@@ -68,34 +75,58 @@ class DfaMaker:
     def __init__(self, nfa):
         self.nfa = nfa
         self.dfa = Dfa()
+        self.indistinguishables = {} # key is HashableSet, value is HashableSet
 
-    def gen(self, hs):
+    def convert(self, hs):
         """
+        convert nfa to dfa
+
         care Dfa.states' NoneValueProperty
         """
-        #TODO epsilon move
         assert(type(hs) == HashableSet) # hs as DFA state, as NFA state set
         if hs in self.dfa.states:
             return
-        self.dfa.states[hs] = self.make_transitions(hs)
-        for hs in self.dfa.states[hs].values():
-            self.gen(hs)
+        self.dfa.states[hs] = None
+        hs_extended, trans_dict = self.for_next_dfa_state(hs)
+        if hs != hs_extended:
+            self.indistinguishables[hs] = hs_extended
+        self.dfa.states[HashableSet(hs_extended)] = Transitions.construct(trans_dict)
+        for hs in self.dfa.states[hs_extended].values():
+            self.convert(hs)
 
-    def make_transitions(self, hs):
+    def for_next_dfa_state(self, _hs):
+        """
+        途中で通ったNFAstateを追加
+        Noneがあれば、さらにたどる
+        hs_extended を返す。hs_extended にある trans をまとめる
+        """
+        hs = HashableSet(_hs)
+        assert(id(hs) != id(_hs))
         target_trans_list = []
-        for nfa_key in hs:
-            trans_list = self.nfa.states[nfa_key]
-            target_trans_list.extend(trans_list)
-        return Transitions.construct(target_trans_list)
+        next_nfa_states = set(hs) # stores distinations of epsilon_transition
+        while not (len(next_nfa_states) == 0):
+            # one step epsilon transition
+            s = set()
+            for nfa_key in next_nfa_states:
+                for trans in self.nfa.states[nfa_key]:
+                    if trans.char is None:
+                        s.add(trans.to)
+                    else:
+                        target_trans_list.append(trans)
+            next_nfa_states = s - hs
+            hs = hs.union(next_nfa_states) # HashableSet.union returning HashableSet is better.
+        return HashableSet(hs), target_trans_list
 
+    def slim(self):
+        pass
 
     @staticmethod
     def run(nfa):
-        """
-        convert nfa to dfa
-        """
         dm = DfaMaker(nfa)
-        dm.gen(HashableSet([0]))
+        dm.convert(HashableSet([0]))
+        print('dm.indistinguishables') # debug
+        print(dm.indistinguishables) # debug
+        dm.slim()
         return dm.dfa
 
 

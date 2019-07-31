@@ -38,7 +38,7 @@ class Nfa:
     """
 
     def __init__(self):
-        self.states = []
+        self.states = [] #TODO set is better. please change class commment, too.
 
     def gen_node(self):
         key = len(self.states)
