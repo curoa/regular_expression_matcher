@@ -62,6 +62,7 @@ class Dfa:
         # key means DFA_state as key of self.states
         self.start_key = None # int or None
         self.accepted_keys = set()
+        self.pos = None
 
     def __str__(self):
         return pf(vars(self))
@@ -87,4 +88,11 @@ class Dfa:
             alphabets = alphabets.union(self.states[state].keys())
         return alphabets
 
+    def is_accepted(self, s):
+        self.pos = self.start_key
+        for c in s:
+            self.pos = self.states[self.pos].get(c)
+            if self.pos is None:
+                return False
+        return self.pos in self.accepted_keys
 
