@@ -49,6 +49,8 @@ class SplitFind:
 
     def slim(self):
         """
+        chage cell_ids smaller, because cell_ids tends to become sparse.
+
         adjust self.count_splited
         """
         convert_dict = {}
