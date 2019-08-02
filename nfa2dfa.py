@@ -23,6 +23,12 @@ from dfa import Dfa, Transitions, HashableSet
 from split_find import SplitFind
 
 class Nfa2Dfa:
+    """
+    NFA state n_i \in N
+    DFA state d_i \in D
+    d_i \subset N
+    D \subset 2^N
+    """
 
     def __init__(self, nfa):
         self.nfa = nfa
@@ -45,18 +51,21 @@ class Nfa2Dfa:
         if hs in self.dfa.states:
             return
         self.dfa.states[hs] = None
-        hs_extended, trans_dict = self.for_next_dfa_state(hs)
+        hs_extended, trans_dict = self.extend_by_epsilon(hs)
         if hs != hs_extended:
             self.epsilon_extented[hs] = hs_extended
         self.dfa.states[hs_extended] = Transitions.construct(trans_dict)
         for hs in self.dfa.states[hs_extended].values():
             self.convert(hs)
 
-    def for_next_dfa_state(self, _hs):
+    def extend_by_epsilon(self, _hs):
         """
-        途中で通ったNFAstateを追加
-        Noneがあれば、さらにたどる
-        hs_extended を返す。hs_extended にある trans をまとめる
+        Extend DFA state by epsilon transition.
+        extended state is super set of original state.
+        epsilon transition is represented by None char Transition.
+
+        return target_trans_list, too.
+        target_trans_list is union of Extend DFA states' trans list
         """
         hs = HashableSet(_hs)
         assert(id(hs) != id(_hs))
